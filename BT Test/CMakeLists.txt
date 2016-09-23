@@ -40,4 +40,4 @@ add_executable(
 	profiles.cpp
 )
 target_link_libraries(xbt_client_backend z boost_filesystem-mt boost_program_options-mt)
-link_directories(/usr/lib/x86_64-linux-gnu)
+
