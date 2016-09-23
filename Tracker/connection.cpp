@@ -4,7 +4,6 @@
 #include <bt_misc.h>
 #include <bt_strings.h>
 #include <bvalue.h>
-#include <iostream>
 #include <xcc_z.h>
 #include "server.h"
 
@@ -54,6 +53,7 @@ int Cconnection::recv()
 			return 1;
 		case WSAEWOULDBLOCK:
 			return 0;
+		default:break;
 		}
 		std::cerr << "recv failed: " << Csocket::error2a(e) << std::endl;
 		return 1;
@@ -87,6 +87,7 @@ int Cconnection::recv()
 			case 4:
 				m_state++;
 				break;
+			default:break;
 			}
 			a++;
 		}
@@ -110,6 +111,7 @@ int Cconnection::send()
 			return 1;
 		case WSAEWOULDBLOCK:
 			return 0;
+		default:break;
 		}
 		std::cerr << "send failed: " << Csocket::error2a(e) << std::endl;
 		return 1;
@@ -178,11 +180,9 @@ void Cconnection::read(const std::string& v)
 		if (!ti.valid())
 			break;
 		gzip = false;
-		if (0)
-			s = Cbvalue().d(bts_failure_reason, bts_banned_client).read();
-		else
 		{
-			std::string error = m_server->insert_peer(ti, false, m_server->find_user_by_torrent_pass(torrent_pass0, ti.m_info_hash));
+			std::string error = m_server->insert_peer(ti, false, m_server->find_user_by_torrent_pass(torrent_pass0,
+																									 ti.m_info_hash));
 			s = error.empty() ? m_server->select_peers(ti) : Cbvalue().d(bts_failure_reason, error).read();
 		}
 		break;
@@ -207,6 +207,7 @@ void Cconnection::read(const std::string& v)
  			s = m_server->scrape(ti, m_server->find_user_by_torrent_pass(torrent_pass0, ti.m_info_hash));
 		}
 		break;
+	default:break;
 	}
 	if (s.empty())
 	{
@@ -246,12 +247,12 @@ void Cconnection::read(const std::string& v)
 	msghdr m;
 	m.msg_name = NULL;
 	m.msg_namelen = 0;
-	m.msg_iov = const_cast<iovec*>(d.data());
-	m.msg_iovlen = d.size();
+	m.msg_iov = d.data();
+	m.msg_iovlen = (int) d.size();
 	m.msg_control = NULL;
 	m.msg_controllen = 0;
 	m.msg_flags = 0;
-	int r = sendmsg(m_s, &m, MSG_NOSIGNAL);
+	int r = (int) sendmsg(m_s, &m, MSG_NOSIGNAL);
 #endif
 	if (r == SOCKET_ERROR)
 	{
