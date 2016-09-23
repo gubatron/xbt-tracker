@@ -1,20 +1,16 @@
-#include "stdafx.h"
+
 #include "socket.h"
 
-#include <boost/version.hpp>
 #if BOOST_VERSION >= 104200
 #include <boost/make_shared.hpp>
 #endif
-#include <cstdio>
 
 #ifdef WIN32
 #pragma comment(lib, "ws2_32.lib")
 #else
 #include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <fcntl.h>
 #include <netdb.h>
-#include <unistd.h>
+
 #endif
 
 #ifndef INADDR_NONE
