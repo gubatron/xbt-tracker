@@ -29,10 +29,10 @@ int Cconnection::pre_select(fd_set* fd_read_set, fd_set* fd_write_set)
 
 int Cconnection::post_select(fd_set* fd_read_set, fd_set* fd_write_set)
 {
-	return FD_ISSET(m_s, fd_read_set) && recv()
-		|| FD_ISSET(m_s, fd_write_set) && send()
+	return (FD_ISSET(m_s, fd_read_set) && recv())
+		|| (FD_ISSET(m_s, fd_write_set) && send())
 		|| m_server->time() - m_ctime > 10
-		|| m_state == 5 && m_r.empty();
+		|| (m_state == 5 && m_r.empty());
 }
 
 int Cconnection::recv()
@@ -122,28 +122,25 @@ int Cconnection::send()
 	return 0;
 }
 
-void Cconnection::read(const std::string& v)
-{
+void Cconnection::read(const std::string& v) {
 #ifndef NDEBUG
 	std::cout << v << std::endl;
 #endif
-	if (m_server->config().m_log_access)
-	{
+	if (m_server->config().m_log_access) {
 		static std::ofstream f("xbt_tracker_raw.log");
-		f << m_server->time() << '\t' << inet_ntoa(m_a.sin_addr) << '\t' << ntohs(m_a.sin_port) << '\t' << v << std::endl;
+		f << m_server->time() << '\t' << inet_ntoa(m_a.sin_addr) << '\t' << ntohs(m_a.sin_port) << '\t' << v
+		  << std::endl;
 	}
 	Ctracker_input ti;
 	size_t e = v.find('?');
 	if (e == std::string::npos)
 		e = v.size();
-	else
-	{
+	else {
 		size_t a = e + 1;
 		size_t b = v.find(' ', a);
 		if (b == std::string::npos)
 			return;
-		while (a < b)
-		{
+		while (a < b) {
 			size_t c = v.find('=', a);
 			if (c++ == std::string::npos)
 				break;
@@ -158,13 +155,11 @@ void Cconnection::read(const std::string& v)
 		ti.m_ipa = m_a.sin_addr.s_addr;
 	std::string torrent_pass0;
 	size_t a = 4;
-	if (a < e && v[a] == '/')
-	{
+	if (a < e && v[a] == '/') {
 		a++;
 		if (a + 1 < e && v[a + 1] == '/')
 			a += 2;
-		if (a + 32 < e && v[a + 32] == '/')
-		{
+		if (a + 32 < e && v[a + 32] == '/') {
 			torrent_pass0 = v.substr(a, 32);
 			a += 33;
 			if (a + 40 < e && v[a + 40] == '/')
@@ -174,75 +169,67 @@ void Cconnection::read(const std::string& v)
 	std::string h = "HTTP/1.0 200 OK\r\n";
 	Cvirtual_binary s;
 	bool gzip = true;
-	switch (a < v.size() ? v[a] : 0)
-	{
-	case 'a':
-		if (!ti.valid())
+	switch (a < v.size() ? v[a] : 0) {
+		case 'a':
+			if (!ti.valid())
+				break;
+			gzip = false;
+			{
+				std::string error = m_server->insert_peer(ti, false, m_server->find_user_by_torrent_pass(torrent_pass0,
+																										 ti.m_info_hash));
+				s = error.empty() ? m_server->select_peers(ti) : Cbvalue().d(bts_failure_reason, error).read();
+			}
 			break;
-		gzip = false;
-		{
-			std::string error = m_server->insert_peer(ti, false, m_server->find_user_by_torrent_pass(torrent_pass0,
-																									 ti.m_info_hash));
-			s = error.empty() ? m_server->select_peers(ti) : Cbvalue().d(bts_failure_reason, error).read();
-		}
-		break;
-	case 'd':
-		if (m_server->config().m_debug)
-		{
-			gzip = m_server->config().m_gzip_debug;
-			h += "Content-Type: text/html; charset=us-ascii\r\n";
-			s = Cvirtual_binary(m_server->debug(ti));
-		}
-		break;
-	case 's':
-		if (v.size() >= 7 && v[6] == 't')
-		{
-			gzip = m_server->config().m_gzip_debug;
-			h += "Content-Type: text/html; charset=us-ascii\r\n";
-			s = Cvirtual_binary(m_server->statistics());
-		}
-		else if (m_server->config().m_full_scrape || ti.m_compact || !ti.m_info_hash.empty())
-		{
-			gzip = m_server->config().m_gzip_scrape && !ti.m_compact && ti.m_info_hash.empty();
- 			s = m_server->scrape(ti, m_server->find_user_by_torrent_pass(torrent_pass0, ti.m_info_hash));
-		}
-		break;
-	default:break;
+		case 'd':
+			if (m_server->config().m_debug) {
+				gzip = m_server->config().m_gzip_debug;
+				h += "Content-Type: text/html; charset=us-ascii\r\n";
+				s = Cvirtual_binary(m_server->debug(ti));
+			}
+			break;
+		case 's':
+			if (v.size() >= 7 && v[6] == 't') {
+				gzip = m_server->config().m_gzip_debug;
+				h += "Content-Type: text/html; charset=us-ascii\r\n";
+				s = Cvirtual_binary(m_server->statistics());
+			} else if (m_server->config().m_full_scrape || ti.m_compact || !ti.m_info_hash.empty()) {
+				gzip = m_server->config().m_gzip_scrape && !ti.m_compact && ti.m_info_hash.empty();
+				s = m_server->scrape(ti, m_server->find_user_by_torrent_pass(torrent_pass0, ti.m_info_hash));
+			}
+			break;
+		default:
+			break;
 	}
-	if (s.empty())
-	{
+	if (s.empty()) {
 		if (!ti.m_peer_id.empty() || m_server->config().m_redirect_url.empty())
 			h = "HTTP/1.0 404 Not Found\r\n";
-		else
-		{
+		else {
 			h = "HTTP/1.0 302 Found\r\n"
-				"Location: " + m_server->config().m_redirect_url + (ti.m_info_hash.empty() ? "" : "?info_hash=" + uri_encode(ti.m_info_hash)) + "\r\n";
+						"Location: " + m_server->config().m_redirect_url +
+				(ti.m_info_hash.empty() ? "" : "?info_hash=" + uri_encode(ti.m_info_hash)) + "\r\n";
 		}
-	}
-	else if (gzip)
-	{
+	} else if (gzip) {
 		Cvirtual_binary s2 = xcc_z::gzip(s);
 #ifndef NDEBUG
-		static std::ofstream f("xbt_tracker_gzip.log");
-		f << m_server->time() << '\t' << v[5] << '\t' << s.size() << '\t' << s2.size() << std::endl;
+        static std::ofstream f("xbt_tracker_gzip.log");
+        f << m_server->time() << '\t' << v[5] << '\t' << s.size() << '\t' << s2.size() << std::endl;
 #endif
-		if (s2.size() + 24 < s.size())
-		{
+		if (s2.size() + 24 < s.size()) {
 			h += "Content-Encoding: gzip\r\n";
 			s = s2;
 		}
 	}
 	h += "\r\n";
 #ifdef WIN32
-	m_write_b.resize(h.size() + s.size());
-	memcpy(m_write_b.data_edit(), h.data(), h.size());
-	s.read(m_write_b.data_edit() + h.size());
-	int r = m_s.send(m_write_b);
+    m_write_b.resize(h.size() + s.size());
+    memcpy(m_write_b.data_edit(), h.data(), h.size());
+    s.read(m_write_b.data_edit() + h.size());
+    int r = m_s.send(m_write_b);
 #else
 	boost::array<iovec, 2> d;
-	d[0].iov_base = const_cast<char*>(h.data());
+	d[0].iov_base = const_cast<char *>(h.data());
 	d[0].iov_len = h.size();
-	d[1].iov_base = const_cast<unsigned char*>(s.data());
+	d[1].iov_base = const_cast<unsigned char *>(s.data());
 	d[1].iov_len = s.size();
 	msghdr m;
 	m.msg_name = NULL;
@@ -254,22 +241,16 @@ void Cconnection::read(const std::string& v)
 	m.msg_flags = 0;
 	int r = (int) sendmsg(m_s, &m, MSG_NOSIGNAL);
 #endif
-	if (r == SOCKET_ERROR)
-	{
+	if (r == SOCKET_ERROR) {
 		if (WSAGetLastError() != WSAECONNRESET)
 			std::cerr << "send failed: " << Csocket::error2a(WSAGetLastError()) << std::endl;
-	}
-	else if (r != h.size() + s.size())
-	{
+	} else if (r != h.size() + s.size()) {
 #ifndef WIN32
-		if (r < h.size())
-		{
+		if (r < h.size()) {
 			m_write_b.resize(h.size() + s.size());
 			memcpy(m_write_b.data_edit(), h.data(), h.size());
 			s.read(m_write_b.data_edit() + h.size());
-		}
-		else
-		{
+		} else {
 			m_write_b = s;
 			r -= h.size();
 		}
@@ -277,16 +258,18 @@ void Cconnection::read(const std::string& v)
 		m_r = m_write_b;
 		m_r += r;
 	}
-	if (m_r.empty())
+	if (m_r.empty()) {
 		m_write_b.clear();
+	}
 }
 
 void Cconnection::process_events(int events)
 {
-	if (events & (EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP) && recv()
-		|| events & EPOLLOUT && send()
-		|| m_state == 5 && m_write_b.empty())
+	if ((events & (EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP) && recv())
+		|| (events & EPOLLOUT && send())
+		|| (m_state == 5 && m_write_b.empty())) {
 		m_s.close();
+	}
 }
 
 int Cconnection::run()
