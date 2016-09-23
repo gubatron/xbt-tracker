@@ -17,7 +17,6 @@ protected:
 	{
 		return m_s;
 	}
-
 	void s(const Csocket& s)
 	{
 		m_s = s;

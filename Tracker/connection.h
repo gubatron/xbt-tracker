@@ -9,7 +9,7 @@ class Cserver;
 class Cconnection: public Cclient, boost::noncopyable
 {
 public:
-	Cclient::s;
+	using Cclient::s;
 	int run();
 	void read(const std::string&);
 	int recv();
