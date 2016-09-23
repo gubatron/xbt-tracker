@@ -1,4 +1,11 @@
 mysql_host = localhost
 mysql_user = xbt
-mysql_password =
+mysql_password = xbt
 mysql_database = xbt
+
+auto_register = 1
+debug = 1
+full_scrape = 1
+#log_announce = 1
+write_db_interval = 10
+daemon = 0
