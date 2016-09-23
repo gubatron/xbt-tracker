@@ -2,8 +2,7 @@
 #include "xbt/sql_query.h"
 
 #include <cstdio>
-#include <vector>
-#include <xbt/find_ptr.h>
+#include <iostream>
 #include "xbt/database.h"
 
 Csql_query::Csql_query(Cdatabase& database, const std::string& v):
@@ -14,7 +13,9 @@ Csql_query::Csql_query(Cdatabase& database, const std::string& v):
 
 Csql_result Csql_query::execute() const
 {
-	return m_database.query(read());
+	std::string query = read();
+	std::cout << "mysql_query -> " << query << std::endl;
+	return m_database.query(query);
 }
 
 std::string Csql_query::replace_names(const std::string& v) const

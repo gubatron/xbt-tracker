@@ -613,7 +613,7 @@ void Cserver::write_db_files() {
                                     i.first).execute();
                             file.fid = m_database.insert_id();
                         }
-                        buffer += Csql_query(m_database, "(?,?,?,?,?),").p(i.first).p(file.leechers).p(file.seeders).p(
+                        buffer += Csql_query(m_database, "(x'?',?,?,?,?),").p(hex_decode(i.first)).p(file.leechers).p(file.seeders).p(
                                 file.completed).p(file.fid).read();
                         file.dirty = false;
                     }
