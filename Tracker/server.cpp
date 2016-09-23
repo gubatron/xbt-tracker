@@ -613,14 +613,14 @@ void Cserver::write_db_files() {
                                     i.first).execute();
                             file.fid = m_database.insert_id();
                         }
-                        buffer += Csql_query(m_database, "(?,?,?,?),").p(file.leechers).p(file.seeders).p(
+                        buffer += Csql_query(m_database, "(?,?,?,?,?),").p(i.first).p(file.leechers).p(file.seeders).p(
                                 file.completed).p(file.fid).read();
                         file.dirty = false;
                     }
         if (!buffer.empty()) {
             buffer.erase(buffer.size() - 1);
             m_database.query(
-                    "insert into " + db_name("files") + " (" + db_name("leechers") + ", " + db_name("seeders") + ", " +
+                    "insert into " + db_name("files") + " (" + db_name("info_hash") + "," + db_name("leechers") + ", " + db_name("seeders") + ", " +
                     db_name("completed") + ", " + db_name("fid") + ") values "
                     + buffer
                     + " on duplicate key update"
