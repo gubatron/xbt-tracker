@@ -1,6 +1,10 @@
 
 #include "socket.h"
 
+#ifdef __linux
+#include <cstdio>
+#endif
+
 #if BOOST_VERSION >= 104200
 #include <boost/make_shared.hpp>
 #endif

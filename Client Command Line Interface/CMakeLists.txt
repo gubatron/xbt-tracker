@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.4)
 set(CMAKE_BUILD_TYPE release)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+find_package(Boost REQUIRED COMPONENTS program_options system-mt)
+find_library(PROGRAM_OPTIONS program_options)
+find_library(SYSTEM_MT system-mt)
 include_directories(. ../misc)
 add_executable(
 	xbt_client_cli
@@ -10,4 +14,5 @@ add_executable(
 	../misc/xcc_z.cpp
 	"XBT Client Command Line Interface.cpp"
 )
-target_link_libraries(xbt_client_cli boost_program_options-mt boost_system-mt z)
+
+target_link_libraries(xbt_client_cli z boost_system-mt boost_program_options)

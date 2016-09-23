@@ -39,4 +39,5 @@ add_executable(
 	data_counter.cpp
 	profiles.cpp
 )
-target_link_libraries(xbt_client_backend boost_filesystem-mt boost_program_options-mt z)
+target_link_libraries(xbt_client_backend z boost_filesystem-mt boost_program_options-mt)
+link_directories(/usr/lib/x86_64-linux-gnu)
