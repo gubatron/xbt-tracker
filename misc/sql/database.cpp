@@ -42,7 +42,7 @@ Csql_result Cdatabase::query(const std::string& q)
 	{
 		if (m_echo_errors)
 		{
-			std::cerr << mysql_error(&m_handle) << std::endl
+			std::cerr << "mysql_error: " << mysql_error(&m_handle) << std::endl
 				<< q.substr(0, 239) << std::endl;
 		}
 #ifndef WIN32
