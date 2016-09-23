@@ -26,17 +26,19 @@ std::string uri_encode(const std::string&);
 int xbt_atoi(const std::string&);
 std::string xbt_version2a(int);
 
-inline long long htonll(long long v)
+#ifndef __APPLE__
+inline long long htonll(long long val)
 {
-	const unsigned char* a = reinterpret_cast<const unsigned char*>(&v);
+	const unsigned char* a = reinterpret_cast<const unsigned char*>(&val);
 	long long b = a[0] << 24 | a[1] << 16 | a[2] << 8 | a[3];
-	return b << 32 | static_cast<long long>(a[4]) << 24 | a[5] << 16 | a[6] << 8 | a[7];
+	return (b << 32) | static_cast<long long>(a[4]) << 24 | a[5] << 16 | a[6] << 8 | a[7];
 }
 
 inline long long ntohll(long long v)
 {
 	return htonll(v);
 }
+#endif
 
 enum
 {

@@ -67,6 +67,10 @@ const int INVALID_SOCKET = -1;
 const int SOCKET_ERROR = -1;
 #endif
 
+#ifndef MSG_NOSIGNAL
+const int MSG_NOSIGNAL = 0;
+#endif
+
 class Csocket_source: boost::noncopyable
 {
 public:

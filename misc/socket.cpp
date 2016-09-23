@@ -21,10 +21,6 @@
 const int INADDR_NONE = -1;
 #endif
 
-#ifndef MSG_NOSIGNAL
-const int MSG_NOSIGNAL = 0;
-#endif
-
 static bool g_start_up_done = false;
 
 Csocket::Csocket(SOCKET s)
