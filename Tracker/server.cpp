@@ -613,15 +613,27 @@ void Cserver::write_db_files() {
                                     i.first).execute();
                             file.fid = m_database.insert_id();
                         }
-                        buffer += Csql_query(m_database, "(?,?,?,?,?),").p("x'" + hex_encode(i.first) + "'").p(file.leechers).p(file.seeders).p(
+
+                        std::cout << "Cserver::write_db_files() i.first length: " << i.first.length() << std::endl;
+                        std::cout << "Cserver::write_db_files() i.first in hex: " << hex_encode(i.first) << std::endl;
+
+                        buffer += Csql_query(m_database, "(?,?,?,?,?,unix_timestamp()),").p(i.first).p(file.leechers).p(file.seeders).p(
                                 file.completed).p(file.fid).read();
+
+                        std::cout << "CServer::write_db_file() -> [" << buffer << "]" << std::endl;
+
                         file.dirty = false;
                     }
         if (!buffer.empty()) {
             buffer.erase(buffer.size() - 1);
             m_database.query(
-                    "insert into " + db_name("files") + " (" + db_name("info_hash") + "," + db_name("leechers") + ", " + db_name("seeders") + ", " +
-                    db_name("completed") + ", " + db_name("fid") + ") values "
+                    "insert ignore into " + db_name("files") +
+                    " (" + db_name("info_hash") + "," + //1
+                            db_name("leechers") + ", " +  //2
+                            db_name("seeders") + ", " +  //3
+                            db_name("completed") + ", " +  //4
+                            db_name("fid") + ", " + //5
+                            db_name("mtime") + ") values " //6
                     + buffer
                     + " on duplicate key update"
                     + "  " + db_name("leechers") + " = values(" + db_name("leechers") + "),"
