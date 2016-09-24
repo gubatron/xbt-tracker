@@ -14,7 +14,7 @@ Csql_query::Csql_query(Cdatabase& database, const std::string& v):
 Csql_result Csql_query::execute() const
 {
 	std::string query = read();
-	std::cout << "mysql_query -> " << query << std::endl;
+	//std::cout << "mysql_query -> " << query << std::endl;
 	return m_database.query(query);
 }
 

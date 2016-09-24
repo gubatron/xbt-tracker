@@ -614,13 +614,13 @@ void Cserver::write_db_files() {
                             file.fid = m_database.insert_id();
                         }
 
-                        std::cout << "Cserver::write_db_files() i.first length: " << i.first.length() << std::endl;
-                        std::cout << "Cserver::write_db_files() i.first in hex: " << hex_encode(i.first) << std::endl;
+                        //std::cout << "Cserver::write_db_files() i.first length: " << i.first.length() << std::endl;
+                        //std::cout << "Cserver::write_db_files() i.first in hex: " << hex_encode(i.first) << std::endl;
 
                         buffer += Csql_query(m_database, "(?,?,?,?,?,unix_timestamp()),").p(i.first).p(file.leechers).p(file.seeders).p(
                                 file.completed).p(file.fid).read();
 
-                        std::cout << "CServer::write_db_file() -> [" << buffer << "]" << std::endl;
+                        //std::cout << "CServer::write_db_file() -> [" << buffer << "]" << std::endl;
 
                         file.dirty = false;
                     }
